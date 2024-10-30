@@ -236,6 +236,15 @@ jugar(){
 
 ensenarEstadisticas(){
         cargar_configuracion
+        if test ! -f "$LOG" 
+        then
+                echo "FECHA|HORA|ANA|JUAN|PABLO|LUIS|CARMEN|ELENA|DORI|BLAS|ZOE|FRAN|TIEMPO_TOTAL|JUGADORES|GANADOR" > "$LOG"
+        elif test ! -s "$LOG" 
+        then
+                echo "FECHA|HORA|ANA|JUAN|PABLO|LUIS|CARMEN|ELENA|DORI|BLAS|ZOE|FRAN|TIEMPO_TOTAL|JUGADORES|GANADOR" > "$LOG"
+        
+        fi
+
         TOTALTIEMPO=0
         TOTPARTIDAS=0
         MIN_TIEMPO=9999999
@@ -336,10 +345,9 @@ ensenarEstadisticas(){
         printf "%-10s | %-8s | %-10s | %-8s\n" "NOMBRE" "GANADAS" "FINALISTA" "ULTIMO" 
         printf "%s\n" "--------------------------------------------"
 
-
-        # Imprimir estadísticas por jugador
-        for nombre in "${NOMBRES[@]}"; do
-        # Ajuste manual de espacios para alinear columnas
+        #EXPLICAR POR QUÉ SE USA PRINTF EN VEZ DE ECHO
+        for nombre in "${NOMBRES[*]}"
+        do
                 printf "%-10s | %-8s | %-10s | %-8s\n" "$nombre" "${GANADAS[$nombre]}" "${FINALISTAS[$nombre]}" "${ULTIMOS[$nombre]}"
         done
         
