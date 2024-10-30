@@ -235,63 +235,107 @@ jugar(){
 }                        
 
 ensenarEstadisticas(){
-        if test -f "$LOG"
-        then
+        TOTALTIEMPO=0
+        TOTPARTIDAS=0
+        MIN_TIEMPO=9999999
+        MAX_TIEMPO=0      
+        MASCORTA=()
+        MASLARGA=()  
+        PORCENTAJES=()
+        TEMPORAL=0
+        declare -A GANADAS FINALISTAS
+        JESTAT=()
+        ULTIMOS=()
+        JUGADAS=()
 
-           TOTPARTIDAS=0
-           TOTALTIEMPO=0
-           #PARTIDACORTA
-           #PARTIDALARGA
-
-           declare -A VICTORIASJUG
-           declare -A FINALISTAJUG
-           declare -A ULTIMOJUG
-           declare -A PARTICIPACIONESJUG
-           #ESTADISTICA INVENTADA
-
-           for nombre in "${NOMBRES[*]}"
-             do
-                VICTORIASJUG=0
-                FINALISTAJUG=0
-                ULTIMOJUG=0
-                PARTICIPACIONESJUG=0
-             done
+        for nombre in "${NOMBRES[*]}"; do
+                GANADAS[$nombre]=0
+                FINALISTAS[$nombre]=0
+        done
 
 
-           while IFS="|" read -r FECHA HORA ELIMINADOS TOTALTIEMPO JUGADORES GANADOR;
+
+        #HACER COMENTARIO IFS
+        while IFS="|" read -r FECHA HORA ANA JUAN PABLO LUIS CARMEN ELENA DORI BLAS ZOE FRAN TIEMPO_TOTAL JUGADORES GANADOR
+        do
+    # Saltar la cabecera
+        if [ "$FECHA" != "FECHA" ]; then
+                # Acumular tiempo total
+                TOTALTIEMPO=$((TOTALTIEMPO + TIEMPO_TOTAL))
+                TOTPARTIDAS=$((TOTPARTIDAS + 1))
+                
+                # Guardar el tiempo total en formato con barras
+                #echo "|$FECHA|$HORA|$ANA|$JUAN|$PABLO|$LUIS|$CARMEN|$ELENA|$DORI|$BLAS|$ZOE|$FRAN|$TIEMPO_TOTAL|$JUGADORES|$GANADOR|"
+                JESTAT=("$ANA" "$JUAN" "$PABLO" "$LUIS" "$CARMEN" "$ELENA" "$DORI" "$BLAS" "$ZOE" "$FRAN")
+                for((i=2;i<=10;i++))
                 do
-                  TOTPARTIDAS=$((TOTPARTIDAS+1))
-                  TOTALTIEMPO="$FECHA $HORA | Tiempo: $TOTALTIEMPO | JUgadores: &JUGADORES | Ganador: $GANADOR"
+                        if test $JUGADORES -eq $i
+                        then
+                                PORCENTAJES[$i]=$((PORCENTAJES[$i] + 1))
+                        else
+                                PORCENTAJES[$i]=$((PORCENTAJES[$i] + 0))
+                        fi
+                done
+
+                
+                for((i=0;i<${#JESTAT[*]};i++))
+                do      
+                        case "${JESTAT[$i]}" in 
+                                1)
+                                        GANADAS[${NOMBRES[$i]}]=$((GANADAS[${NOMBRES[$i]}] + 1))
+                                        ;;
+                                2)
+                                        FINALISTAS[${NOMBRES[$i]}]=$((FINALISTAS[${NOMBRES[$i]}] + 1))
+                                        ;;
+                                3)
+                                        ULTIMOS[${NOMBRES[$i]}]=$((ULTIMOS[${NOMBRES[$i]}] + 1))
+                                        ;;
+                                "-")
+                                # El jugador no participó, no se hace nada
+                                continue
+                                ;;
+                        esac
                 done
 
 
-                echo "ESTADISTICAS DEL JUEGO -TODAS LAS RONDAS-"
-                echo "-----------------------------------------"
-                echo Numero total de partidas jugadas: $TOTPARTIDAS
-                echo Media de los tiempos de las partidas: $MEDIATIEMPO
-                #echo Partida mas corta: $PARTIDACORTA
-                #echo Partida mas larga: $PARTIDALARGA
-                echo Porcentaje de partidas por cada numero de jugadores:
-                        for((i=2; i<=10; i++)); do
-                          if TOTPARTIDAS -gt 0
-                          then
-                            PORCENTAJE=$((JUGADORES[$i]/TOTPARTIDAS*100))
-                          else
-                            PORCENTAJE=0
-                          fi
+                # Actualizar el tiempo mínimo y máximo
+                if test $TIEMPO_TOTAL -lt $MIN_TIEMPO 
+                then
+                        MIN_TIEMPO=$TIEMPO_TOTAL
+                        MASCORTA="|$FECHA|$HORA|$ANA|$JUAN|$PABLO|$LUIS|$CARMEN|$ELENA|$DORI|$BLAS|$ZOE|$FRAN|$TIEMPO_TOTAL|$JUGADORES|$GANADOR|"
+                fi
 
-                          echo Partidas con $i jugadores: $PORCENTAJE
-                        done
+                if [ $TIEMPO_TOTAL -gt $MAX_TIEMPO ]; then
+                        MAX_TIEMPO=$TIEMPO_TOTAL
+                        MASLARGA="|$FECHA|$HORA|$ANA|$JUAN|$PABLO|$LUIS|$CARMEN|$ELENA|$DORI|$BLAS|$ZOE|$FRAN|$TIEMPO_TOTAL|$JUGADORES|$GANADOR|"
+                fi
 
-           if [ "$TOTPARTIDAS" -ne 0 ]; then
-                MEDIATIEMPO=$((TOTALTIEMPO / TOTPARTIDAS))
-           else
-                MEDIATIEMPO=0
-           fi
-
-        else
-           echo "No existe el archivo de log $LOG"
+                
         fi
+        done < "$LOG"
+
+
+        echo "Partida más corta: $MASCORTA"
+        echo "Partida más larga: $MASLARGA"
+        echo "Media de tiempo:   $((TOTALTIEMPO/TOTPARTIDAS))"
+        for((i=2;i<=10;i++))
+        do
+                if test ${PORCENTAJES[$i]} -ne 0 
+                then
+                        TEMPORAL=$(echo "scale=2; ${PORCENTAJES[$i]} * 100 / $TOTPARTIDAS " | bc)
+                        echo "Partida con $i jugadores: ${TEMPORAL}%"
+                else
+                        echo "Partida con $i jugadores: 0%"
+
+                fi
+        done
+
+        echo ${GANADAS[*]}
+        echo
+        echo
+        echo ${FINALISTAS[*]}
+
+        
 
 }
 
@@ -299,6 +343,21 @@ ensenarEstadisticas(){
 
 until test "$FLAG" -ne 1
 do
+        if test "$1" = "-g" 
+        then
+                echo "SSOOI PRIMERA ENTREGA GRUPAL"
+                echo "Integrante 1: Alex Bayle Polo"
+                echo "Integrante 2: Yago Houizot López"
+                echo
+                echo "Campo ADEFINIR en ESTADÍSTICAS:"
+                echo " - Este campo se refiere a *[explicación detallada del campo 'ADEFINIR']*."
+                exit 0  
+        elif test -n "$1" 
+        then    
+                echo "El programa solo admite como argumento -g"
+                echo "Saliendo del programa..."
+                exit 0
+        fi
 
     # MENU----------------------------------------------
     mostrarmenu                                                                                      
