@@ -73,7 +73,7 @@ registrarPartida(){
         TIEMPOFIN=$((10#${TIEMPOFIN:0:2} * 3600 + 10#${TIEMPOFIN:2:2} * 60 + 10#${TIEMPOFIN:4:2}))
         TOTALTIEMPO=$((TIEMPOFIN - TIEMPOIN))
         RESULT="$FECHA|$HORA|"
-        while test $k -le ${#ELIMINADOS[*]}     
+        while test $k -lt ${#ELIMINADOS[*]}     
         do
                 echo ${ELIMINADOS[k]}
                 RESULT="${RESULT}${ELIMINADOS[k]}|"
@@ -152,12 +152,17 @@ asignacion_sillas(){
         for((i=0; i<${#asignacion[*]}; i++))
         do
                 echo "Silla $((i+1))"
-                echo
-                echo "||"
-                echo "||${asignacion[$i]}"
-                echo "|------------|"
-                echo "||          ||"
-                echo "||          ||"
+                echo "   | __  __  __ |"
+                echo "   ||  ||  ||  ||"
+                echo "   ||  ||  ||  ||"
+                echo "   ||  ||  ||  ||"
+                echo "  /             /"
+                echo " /     ${asignacion[$i]} "
+                echo "/_____________/  |"
+                echo "|  |          |  |"
+                echo "|  |          |  |"
+                echo "|  |          |  |"
+                echo "|             |"
         done
 
         echo Eliminado ${NOMBRES2[0]}
@@ -209,7 +214,6 @@ jugar(){
         echo "${NOMBRES2} ha sido el ganador"
         echo ================================
         ELIMINADOS[0]=$NOMBRES2
-        echo ${ELIMINADOS[*]}
         TIEMPOFIN=$(date +%H%M%S)
         registrarPartida
 }                                                                                                                                   
