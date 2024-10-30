@@ -6,7 +6,7 @@ TIEMPO=-1
 FLAG=1
 NOMBRES=("ANA" "JUAN" "PABLO" "LUIS" "CARMEN" "ELENA" "DORI" "BLAS" "ZOE" "FRAN")
 
-#linea 10
+
 mostrarmenu(){
         echo --------------------------------------
         echo           JUEGO DE LAS SILLAS
@@ -15,7 +15,7 @@ mostrarmenu(){
         echo --------------------------------------
         echo    'C) CONFIGURACION'
         echo    'J) JUGAR'
-        echo    'E) ESTADISTICAS' #linea 20
+        echo    'E) ESTADISTICAS' 
         echo    'S) SALIR'
         echo    'Introduzca una opción>>'
         read OPCION
@@ -29,12 +29,13 @@ cargar_configuracion() {
         if test -f "config.cfg"
         then
                 source config.cfg
-                #el soruce nos permite ejecutar el programa, en este caso h$        else
+                #el soruce nos permite ejecutar el programa, en este caso h$        
+        else
                 echo El archivo de configuración config.cfg no existe. Abortando
                 exit 1                                                      
         fi
 }
-#linea 40
+
 configuracion(){
 
         echo  CONFIGURACION  
@@ -42,16 +43,17 @@ configuracion(){
         JUGADORES=0
         TIEMPO=-1
         until test "$JUGADORES" -le 10 -a "$JUGADORES" -ge 2
-        do                                                                 $                echo Numeros de jugadores entre 2 y 10
+        do                                                                                 
+                echo Numeros de jugadores entre 2 y 10
                 read JUGADORES
         done                                                                                                                                            
         # COMPROBACION de que si es un numero sino es una letra                     
-        until [[ ( "$TIEMPO" =~ ^[0-9]+$ && "$TIEMPO" -ge 0 && "$TIEMPO" -le 10 ) || "$TIEMPO" == "v" || "$TIEMPO" == "i"]]
+        until [[ ( "$TIEMPO" =~ ^[0-9]+$ && "$TIEMPO" -ge 0 && "$TIEMPO" -le 10 ) || "$TIEMPO" == "v" || "$TIEMPO" == "i" ]]
         do
-                echo Tiempo de juego de 0-10,v velocidad maxima sin musica,i para pararlo de manera interactiva.
+                echo "Tiempo de juego: 0-10, 'v' para velocidad máxima sin música, 'i' para pararlo de manera interactiva."
                 read TIEMPO
-        #linea 60
         done
+
 
         echo -n "Ruta del archivo de log: "
         read LOG
@@ -63,18 +65,21 @@ configuracion(){
 
 registrarPartida(){          
         k=0
+        RESULT=""
         GANADOR="$NOMBRES2"
         FECHA=$(date +%d/%m/%y)
         HORA=$(date +%H:%M)
-        echo ${ELIMINADOS[*]}
-
+        TIEMPOIN=$((10#${TIEMPOIN:0:2} * 3600 + 10#${TIEMPOIN:2:2} * 60 + 10#${TIEMPOIN:4:2}))
+        TIEMPOFIN=$((10#${TIEMPOFIN:0:2} * 3600 + 10#${TIEMPOFIN:2:2} * 60 + 10#${TIEMPOFIN:4:2}))
+        TOTALTIEMPO=$((TIEMPOFIN - TIEMPOIN))
         RESULT="$FECHA|$HORA|"
-        while test $k -lt ${#ELIMINADOS[*]}     
+        while test $k -le ${#ELIMINADOS[*]}     
         do
+                echo ${ELIMINADOS[k]}
                 RESULT="${RESULT}${ELIMINADOS[k]}|"
                 k=$((k + 1))
         done     
-        RESULT="${RESULT}$TOTALTIEMPO|$JUGADORES|$GANADOR"
+        RESULT="${RESULT}$TOTALTIEMPO segundos|$JUGADORES|$GANADOR"
         if test -f "$LOG"
         then
             echo "$RESULT">>fichero.log
@@ -118,44 +123,96 @@ cargarNombresP(){
          done
 }
 
+asignacion_sillas(){
+        SILLAS_D=()
+        asignacion=()
+        
+        k=0
+        for ((i=1; i<=SILLAS; i++)) 
+        do
+                SILLAS_D+=($i)
+        done
+        while test ${#NOMBRES2[*]} -gt 1
+        do
+                INDICE=$(($RANDOM % ${#SILLAS_D[*]}))
+                INDICE2=$(($RANDOM % ${#NOMBRES2[*]}))
+                asignacion[$k]=${NOMBRES2[$INDICE2]}
+
+                unset SILLAS_D[$INDICE]
+                unset NOMBRES2[$INDICE2]
+                echo ${asignacion[$k]}
+                SILLAS_D=(${SILLAS_D[*]})   
+                NOMBRES2=(${NOMBRES2[*]})
+                k=$((k+1))
+
+        done
+             
+        # Imprimir las asignaciones de sillas
+        echo "Asignaciones de sillas:"
+        for((i=0; i<${#asignacion[*]}; i++))
+        do
+                echo "Silla $((i+1))"
+                echo
+                echo "||"
+                echo "||${asignacion[$i]}"
+                echo "|------------|"
+                echo "||          ||"
+                echo "||          ||"
+        done
+
+        echo Eliminado ${NOMBRES2[0]}
+        ELIMINADOS[${#asignacion[*]}]=${NOMBRES2[0]}
+
+        NOMBRES2=()
+        NOMBRES2=${asignacion[*]}
+        SILLAS=$((SILLAS-1))
+
+}
+
 jugar(){
         cargar_configuracion
         SILLAS=$((JUGADORES-1))
         cargarNombresP
-
-        while test ${#NOMBRES2[*]} -gt 1
+        TIEMPOIN=$(date +%H%M%S)
+        SILLAS_D=()
+        ELIMINADOS=()
+               
+        
+        echo ${SILLAS_D[*]}
+        echo ${NOMBRES2[*]}
+        while test $SILLAS -gt 0
         do                                                                                                                                                                                                        
                 echo Numero jugadores: ${#NOMBRES2[*]}
                 echo Numero de sillas: $SILLAS
 
-                if test "$TIEMPO" = "v"   
+
+                if test "$TIEMPO" = "i"
                 then
-                        echo Velocidad maxima sin musica
-                        sleep 1
-                elif test "$TIEMPO" = "i"
-                then
+                        asignacion_sillas
                         read -p "Presionar enter para detener el juego."
-                else
-                        echo Tiempo de espera: $TIEMPO
-                        sleep $TIEMPO
-                fi
-
-                INDICE=$(($RANDOM%${#NOMBRES2[*]}))
-                echo "${NOMBRES2[INDICE]} ha sido eliminado."
-
-                #Vamos a crear otro array que contenga en orden los jugadores eliminados
-                ELIMINADOS[${#NOMBRES2[*]}]=${NOMBRES2[INDICE]}
-                unset NOMBRES2[INDICE]
-
+                        
+                
+                        elif test "$TIEMPO" = "v"
+                        then
+                                echo Velocidad maxima sin musica
+                                asignacion_sillas
+                        else
+                                echo Tiempo de espera: $TIEMPO
+                                asignacion_sillas
+                                sleep $TIEMPO
+                        fi
+                
                 NOMBRES2=(${NOMBRES2[*]})
-
-                SILLAS=$((SILLAS-1))
-                read -p "Pulse alguna tecla para seguir con la partida."                                                                                                        
+                read -p "Pulse alguna tecla para seguir con la partida."                                                                                                                
         done
-        echo ${NOMBRES2} ha sido el ganador
-        ELIMINADOS=$NOMBRES2
+        echo ================================
+        echo "${NOMBRES2} ha sido el ganador"
+        echo ================================
+        ELIMINADOS[0]=$NOMBRES2
+        echo ${ELIMINADOS[*]}
+        TIEMPOFIN=$(date +%H%M%S)
         registrarPartida
-}                                                                                                                                                                                                 
+}                                                                                                                                   
 until test "$FLAG" -ne 1
 do
 
