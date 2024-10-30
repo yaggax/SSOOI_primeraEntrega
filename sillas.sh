@@ -17,7 +17,7 @@ mostrarmenu(){
         echo    'J) JUGAR'
         echo    'E) ESTADISTICAS' 
         echo    'S) SALIR'
-        echo    'Introduzca una opción>>'
+        echo    '“Juegodelassillas”.Introduzcaunaopción>>'
         read OPCION
         echo Pulse una tecla para continuar
         read
@@ -73,13 +73,25 @@ registrarPartida(){
         TIEMPOFIN=$((10#${TIEMPOFIN:0:2} * 3600 + 10#${TIEMPOFIN:2:2} * 60 + 10#${TIEMPOFIN:4:2}))
         TOTALTIEMPO=$((TIEMPOFIN - TIEMPOIN))
         RESULT="$FECHA|$HORA|"
-        while test $k -lt ${#ELIMINADOS[*]}     
-        do
-                echo ${ELIMINADOS[k]}
-                RESULT="${RESULT}${ELIMINADOS[k]}|"
-                k=$((k + 1))
-        done     
-        RESULT="${RESULT}$TOTALTIEMPO segundos|$JUGADORES|$GANADOR"
+
+        if ! test -f "$LOG"; then
+        echo "FECHA|HORA|ANA|JUAN|PABLO|LUIS|CARMEN|ELENA|DORI|BLAS|ZOE|FRAN|TIEMPO|JUGADORES|GANADOR" >"$LOG"
+        fi
+
+        for nombre in "${NOMBRES[@]}"; do
+        pos="-"
+                for ((i = 0; i < ${#ELIMINADOS[@]}; i++))
+                do
+                        if test  "$nombre" = "${ELIMINADOS[$i]}" 
+                        then
+                                pos=$((i + 1))  
+                                break
+                        fi
+                done
+                RESULT+="$pos|"
+        done
+
+        RESULT="${RESULT}$TOTALTIEMPO|$JUGADORES|$GANADOR"
         if test -f "$LOG"
         then
             echo "$RESULT">>fichero.log
@@ -140,18 +152,18 @@ asignacion_sillas(){
 
                 unset SILLAS_D[$INDICE]
                 unset NOMBRES2[$INDICE2]
-                echo ${asignacion[$k]}
                 SILLAS_D=(${SILLAS_D[*]})   
                 NOMBRES2=(${NOMBRES2[*]})
                 k=$((k+1))
 
         done
              
-        # Imprimir las asignaciones de sillas
         echo "Asignaciones de sillas:"
         for((i=0; i<${#asignacion[*]}; i++))
         do
+                echo
                 echo "Silla $((i+1))"
+                echo "   ______________"
                 echo "   | __  __  __ |"
                 echo "   ||  ||  ||  ||"
                 echo "   ||  ||  ||  ||"
@@ -163,6 +175,7 @@ asignacion_sillas(){
                 echo "|  |          |  |"
                 echo "|  |          |  |"
                 echo "|             |"
+                echo
         done
 
         echo Eliminado ${NOMBRES2[0]}
@@ -193,8 +206,9 @@ jugar(){
 
                 if test "$TIEMPO" = "i"
                 then
+                        echo ♩♭♩♫♬♪♬♫♫♭♭♭♬♩♭
+                        read -p "Presionar enter para detener la música."
                         asignacion_sillas
-                        read -p "Presionar enter para detener el juego."
                         
                 
                         elif test "$TIEMPO" = "v"
@@ -203,8 +217,10 @@ jugar(){
                                 asignacion_sillas
                         else
                                 echo Tiempo de espera: $TIEMPO
-                                asignacion_sillas
+                                echo ♩♭♩♫♬♪♬♫♫♭♭♭♬♩♭
                                 sleep $TIEMPO
+
+                                asignacion_sillas
                         fi
                 
                 NOMBRES2=(${NOMBRES2[*]})
@@ -216,7 +232,71 @@ jugar(){
         ELIMINADOS[0]=$NOMBRES2
         TIEMPOFIN=$(date +%H%M%S)
         registrarPartida
-}                                                                                                                                   
+}                        
+
+ensenarEstadisticas(){
+        if test -f "$LOG"
+        then
+
+           TOTPARTIDAS=0
+           TOTALTIEMPO=0
+           #PARTIDACORTA
+           #PARTIDALARGA
+
+           declare -A VICTORIASJUG
+           declare -A FINALISTAJUG
+           declare -A ULTIMOJUG
+           declare -A PARTICIPACIONESJUG
+           #ESTADISTICA INVENTADA
+
+           for nombre in "${NOMBRES[*]}"
+             do
+                VICTORIASJUG=0
+                FINALISTAJUG=0
+                ULTIMOJUG=0
+                PARTICIPACIONESJUG=0
+             done
+
+
+           while IFS="|" read -r FECHA HORA ELIMINADOS TOTALTIEMPO JUGADORES GANADOR;
+                do
+                  TOTPARTIDAS=$((TOTPARTIDAS+1))
+                  TOTALTIEMPO="$FECHA $HORA | Tiempo: $TOTALTIEMPO | JUgadores: &JUGADORES | Ganador: $GANADOR"
+                done
+
+
+                echo "ESTADISTICAS DEL JUEGO -TODAS LAS RONDAS-"
+                echo "-----------------------------------------"
+                echo Numero total de partidas jugadas: $TOTPARTIDAS
+                echo Media de los tiempos de las partidas: $MEDIATIEMPO
+                #echo Partida mas corta: $PARTIDACORTA
+                #echo Partida mas larga: $PARTIDALARGA
+                echo Porcentaje de partidas por cada numero de jugadores:
+                        for((i=2; i<=10; i++)); do
+                          if TOTPARTIDAS -gt 0
+                          then
+                            PORCENTAJE=$((JUGADORES[$i]/TOTPARTIDAS*100))
+                          else
+                            PORCENTAJE=0
+                          fi
+
+                          echo Partidas con $i jugadores: $PORCENTAJE
+                        done
+
+           if [ "$TOTPARTIDAS" -ne 0 ]; then
+                MEDIATIEMPO=$((TOTALTIEMPO / TOTPARTIDAS))
+           else
+                MEDIATIEMPO=0
+           fi
+
+        else
+           echo "No existe el archivo de log $LOG"
+        fi
+
+}
+
+
+
 until test "$FLAG" -ne 1
 do
 
@@ -236,6 +316,7 @@ do
 
             'E')
             echo Esstadisticas
+            ensenarEstadisticas
             ;;
             'S')
             echo Saliendo...
