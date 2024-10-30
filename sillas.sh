@@ -244,8 +244,6 @@ ensenarEstadisticas(){
         MASLARGA=()  
         PORCENTAJES=()
         TEMPORAL=0
-        GANADAST=0
-        GANADASJ=0
         declare -A GANADAS FINALISTAS ULTIMOS JUGADAS
 
         for nombre in "${NOMBRES[*]}"; do
@@ -335,13 +333,14 @@ ensenarEstadisticas(){
                 fi
         done
 
-        printf "%-10s | %-8s | %-10s | %-8s | %-10s | %-10s | %-10s\n " "NOMBRE" "GANADAS" "FINALISTA" "ULTIMO" "%GANADAST" "%GANADASJ" "*ADEFINIR*"
+        printf "%-10s | %-8s | %-10s | %-8s\n" "NOMBRE" "GANADAS" "FINALISTA" "ULTIMO" 
         printf "%s\n" "--------------------------------------------"
-TEMPORAL=$(echo "scale=2; ${PORCENTAJES[$i]} * 100 / $TOTPARTIDAS " | bc)                           
 
-        for nombre in "${NOMBRES[*]}"
-        do
-                printf "%-10s | %-8s | %-10s | %-8s | %-10s | %-10s | %-10s\n" "$nombre" "${GANADAS[$nombre]}" "${FINALISTAS[$nombre]}" "${ULTIMOS[$nombre]}"
+
+        # Imprimir estadísticas por jugador
+        for nombre in "${NOMBRES[@]}"; do
+        # Ajuste manual de espacios para alinear columnas
+                printf "%-10s | %-8s | %-10s | %-8s\n" "$nombre" "${GANADAS[$nombre]}" "${FINALISTAS[$nombre]}" "${ULTIMOS[$nombre]}"
         done
         
 
