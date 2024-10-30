@@ -253,6 +253,8 @@ ensenarEstadisticas(){
         MASLARGA=()  
         PORCENTAJES=()
         TEMPORAL=0
+        GANADAST=0
+        GANADASJ=0
         declare -A GANADAS FINALISTAS ULTIMOS JUGADAS
 
         for nombre in "${NOMBRES[*]}"; do
@@ -293,12 +295,15 @@ ensenarEstadisticas(){
                         case "${JESTAT[$i]}" in 
                                 1)
                                         GANADAS[${NOMBRES[$i]}]=$((GANADAS[${NOMBRES[$i]}] + 1))
+                                        JUGADAS[${NOMBRES[$i]}]=$((JUGADAS[${NOMBRES[$i]}] + 1))
                                         ;;
                                 2)
                                         FINALISTAS[${NOMBRES[$i]}]=$((FINALISTAS[${NOMBRES[$i]}] + 1))
+                                        JUGADAS[${NOMBRES[$i]}]=$((JUGADAS[${NOMBRES[$i]}] + 1))
                                         ;;
                                 $JUGADORES)
                                         ULTIMOS[${NOMBRES[$i]}]=$((ULTIMOS[${NOMBRES[$i]}] + 1))
+                                        JUGADAS[${NOMBRES[$i]}]=$((JUGADAS[${NOMBRES[$i]}] + 1))
                                         ;;
                                 "-")
                                         ;;
