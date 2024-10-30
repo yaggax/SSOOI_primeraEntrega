@@ -168,14 +168,14 @@ asignacion_sillas(){
                 echo "   ||  ||  ||  ||"
                 echo "   ||  ||  ||  ||"
                 echo "   ||  ||  ||  ||"
-                echo "  /             /"
-                echo " /     ${asignacion[$i]} "
+                echo "  /             /|"
+                printf " / %7s     / |" "${asignacion[$i]}"
+                echo
                 echo "/_____________/  |"
                 echo "|  |          |  |"
                 echo "|  |          |  |"
                 echo "|  |          |  |"
                 echo "|             |"
-                echo
         done
 
         echo Eliminado ${NOMBRES2[0]}
@@ -235,6 +235,7 @@ jugar(){
 }                        
 
 ensenarEstadisticas(){
+        cargar_configuracion
         TOTALTIEMPO=0
         TOTPARTIDAS=0
         MIN_TIEMPO=9999999
@@ -243,14 +244,15 @@ ensenarEstadisticas(){
         MASLARGA=()  
         PORCENTAJES=()
         TEMPORAL=0
-        declare -A GANADAS FINALISTAS
-        JESTAT=()
-        ULTIMOS=()
-        JUGADAS=()
+        GANADAST=0
+        GANADASJ=0
+        declare -A GANADAS FINALISTAS ULTIMOS JUGADAS
 
         for nombre in "${NOMBRES[*]}"; do
                 GANADAS[$nombre]=0
                 FINALISTAS[$nombre]=0
+                ULTIMOS[$nombre]=0
+                JUGADAS[$nombre]=0
         done
 
 
@@ -266,7 +268,8 @@ ensenarEstadisticas(){
                 
                 # Guardar el tiempo total en formato con barras
                 #echo "|$FECHA|$HORA|$ANA|$JUAN|$PABLO|$LUIS|$CARMEN|$ELENA|$DORI|$BLAS|$ZOE|$FRAN|$TIEMPO_TOTAL|$JUGADORES|$GANADOR|"
-                JESTAT=("$ANA" "$JUAN" "$PABLO" "$LUIS" "$CARMEN" "$ELENA" "$DORI" "$BLAS" "$ZOE" "$FRAN")
+                JESTAT=($ANA $JUAN $PABLO $LUIS $CARMEN $ELENA $DORI $BLAS $ZOE $FRAN)
+
                 for((i=2;i<=10;i++))
                 do
                         if test $JUGADORES -eq $i
@@ -287,12 +290,14 @@ ensenarEstadisticas(){
                                 2)
                                         FINALISTAS[${NOMBRES[$i]}]=$((FINALISTAS[${NOMBRES[$i]}] + 1))
                                         ;;
-                                3)
+                                $JUGADORES)
                                         ULTIMOS[${NOMBRES[$i]}]=$((ULTIMOS[${NOMBRES[$i]}] + 1))
                                         ;;
                                 "-")
-                                # El jugador no participó, no se hace nada
-                                continue
+                                        ;;
+                                "*")
+                                        JUGADAS[${NOMBRES[$i]}]=$((JUGADAS[${NOMBRES[$i]}] + 1))
+
                                 ;;
                         esac
                 done
@@ -330,11 +335,14 @@ ensenarEstadisticas(){
                 fi
         done
 
-        echo ${GANADAS[*]}
-        echo
-        echo
-        echo ${FINALISTAS[*]}
+        printf "%-10s | %-8s | %-10s | %-8s | %-10s | %-10s | %-10s\n " "NOMBRE" "GANADAS" "FINALISTA" "ULTIMO" "%GANADAST" "%GANADASJ" "*ADEFINIR*"
+        printf "%s\n" "--------------------------------------------"
+TEMPORAL=$(echo "scale=2; ${PORCENTAJES[$i]} * 100 / $TOTPARTIDAS " | bc)                           
 
+        for nombre in "${NOMBRES[*]}"
+        do
+                printf "%-10s | %-8s | %-10s | %-8s | %-10s | %-10s | %-10s\n" "$nombre" "${GANADAS[$nombre]}" "${FINALISTAS[$nombre]}" "${ULTIMOS[$nombre]}"
+        done
         
 
 }
