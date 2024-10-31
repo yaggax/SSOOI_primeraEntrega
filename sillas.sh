@@ -47,7 +47,6 @@ configuracion(){
                 read JUGADORES
         done            
         echo                                                                                                                                
-        # COMPROBACION de que si es un numero sino es una letra                     
         until test $COMPRUEBA -eq 0 
         do
                 echo "Tiempo de juego: 0-10, 'v' para velocidad máxima sin música, 'i' para pararlo de manera interactiva."
@@ -87,8 +86,7 @@ registrarPartida(){
         GANADOR="$NOMBRES2"
         FECHA=$(date +%d/%m/%y)
         HORA=$(date +%H:%M)
-        TIEMPOIN=$((10#${TIEMPOIN:0:2} * 3600 + 10#${TIEMPOIN:2:2} * 60 + 10#${TIEMPOIN:4:2}))
-        TIEMPOFIN=$((10#${TIEMPOFIN:0:2} * 3600 + 10#${TIEMPOFIN:2:2} * 60 + 10#${TIEMPOFIN:4:2}))
+
         TOTALTIEMPO=$((TIEMPOFIN - TIEMPOIN))
         RESULT="$FECHA|$HORA|"
 
@@ -219,7 +217,7 @@ jugar(){
         cargar_configuracion
         SILLAS=$((JUGADORES-1))
         cargarNombresP
-        TIEMPOIN=$(date +%H%M%S)
+        TIEMPOIN=$SECONDS
         SILLAS_D=()
         ELIMINADOS=()
                
@@ -258,7 +256,7 @@ jugar(){
         echo "${NOMBRES2} ha sido el ganador"
         echo ================================
         ELIMINADOS[0]=$NOMBRES2
-        TIEMPOFIN=$(date +%H%M%S)
+        TIEMPOFIN=$SECONDS
         registrarPartida
 }                        
 
@@ -308,15 +306,11 @@ ensenarEstadisticas(){
         #HACER COMENTARIO IFS
         while IFS="|" read -r FECHA HORA ANA JUAN PABLO LUIS CARMEN ELENA DORI BLAS ZOE FRAN TIEMPO_TOTAL JUGADORES GANADOR
         do
-    # Saltar la cabecera
         if [ "$FECHA" != "FECHA" ]
         then
-                # Acumular tiempo total
                 TOTALTIEMPO=$((TOTALTIEMPO + TIEMPO_TOTAL))
                 TOTPARTIDAS=$((TOTPARTIDAS + 1))
                 
-                # Guardar el tiempo total en formato con barras
-                #echo "|$FECHA|$HORA|$ANA|$JUAN|$PABLO|$LUIS|$CARMEN|$ELENA|$DORI|$BLAS|$ZOE|$FRAN|$TIEMPO_TOTAL|$JUGADORES|$GANADOR|"
                 JESTAT=($ANA $JUAN $PABLO $LUIS $CARMEN $ELENA $DORI $BLAS $ZOE $FRAN)
 
                 for((i=2;i<=10;i++))
@@ -368,7 +362,6 @@ ensenarEstadisticas(){
                 done
 
 
-                # Actualizar el tiempo mínimo y máximo
                 if test $TIEMPO_TOTAL -lt $MIN_TIEMPO 
                 then
                         MIN_TIEMPO=$TIEMPO_TOTAL
