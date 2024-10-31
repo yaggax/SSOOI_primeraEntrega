@@ -1,8 +1,5 @@
 #!/bin/bash
 
-JUGADORES=0
-NOJUEGAN=0
-TIEMPO=-1
 FLAG=1
 NOMBRES=("ANA" "JUAN" "PABLO" "LUIS" "CARMEN" "ELENA" "DORI" "BLAS" "ZOE" "FRAN")
 
@@ -29,7 +26,7 @@ cargar_configuracion() {
         if test -f "config.cfg"
         then
                 source config.cfg
-                #el soruce nos permite ejecutar el programa 
+                #el source nos permite ejecutar el programa 
         else
                 echo El archivo de configuración config.cfg no existe. Abortando
                 exit 1                                                      
@@ -45,6 +42,10 @@ configuracion(){
         do                                                                                 
                 echo Numeros de jugadores entre 2 y 10
                 read JUGADORES
+                if test "$JUGADORES" -gt 10 -o "$JUGADORES" -lt 2
+                then
+                        echo "Error en la selección del número de jugadores."
+                fi
         done            
         echo                                                                                                                                
         until test $COMPRUEBA -eq 0 
@@ -52,7 +53,7 @@ configuracion(){
                 echo "Tiempo de juego: 0-10, 'v' para velocidad máxima sin música, 'i' para pararlo de manera interactiva."
                 read TIEMPO
                 case "$TIEMPO" in
-                        [0-10])
+                        [0-9]|10)
                                 COMPRUEBA=0
                                 ;;
                         "v")
@@ -81,7 +82,6 @@ configuracion(){
 }
 
 registrarPartida(){          
-        k=0
         RESULT=""
         GANADOR="$NOMBRES2"
         FECHA=$(date +%d/%m/%y)
@@ -110,8 +110,13 @@ registrarPartida(){
                 RESULT+="$pos|"
         done
 
+        if [ ! -w "$LOG" ]
+        then
+                chmod 644 $LOG
+        fi
+
         RESULT="${RESULT}$TOTALTIEMPO|$JUGADORES|$GANADOR"
-       if test ! -f "$LOG" 
+        if test ! -f "$LOG" 
         then
                 echo "FECHA|HORA|ANA|JUAN|PABLO|LUIS|CARMEN|ELENA|DORI|BLAS|ZOE|FRAN|TIEMPO_TOTAL|JUGADORES|GANADOR" > "$LOG"
                 echo "$RESULT">>$LOG
@@ -194,6 +199,8 @@ asignacion_sillas(){
                 echo "   ||  ||  ||  ||"
                 echo "   ||  ||  ||  ||"
                 echo "   ||  ||  ||  ||"
+                echo "   ||¯¯||¯¯||¯¯||"
+                echo "   |____________|"
                 echo "  /             /|"
                 printf " / %7s     / |" "${asignacion[$i]}"
                 echo
@@ -406,6 +413,8 @@ ensenarEstadisticas(){
 
         printf "%-10s | %-8s | %-10s | %-8s | %-10s | %-10s | %-10s |\n" "NOMBRE" "GANADAS" "FINALISTA" "ULTIMO" "%GANADAST" "%GANADASJ" "%JUGADAS"
         echo "--------------------------------------------------------------------------------------"
+
+        #Utilizamos printf para dar formato a la cadena impresa
 
         for nombre in ${NOMBRES[*]}
         do 
