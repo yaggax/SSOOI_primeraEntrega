@@ -17,7 +17,7 @@ mostrarmenu(){
         echo    'J) JUGAR'
         echo    'E) ESTADISTICAS' 
         echo    'S) SALIR'
-        echo    '“Juegodelassillas”.Introduzcaunaopción>>'
+        echo    '“Juegodelassillas”.Introduzca una opción>>'
         read OPCION
         echo Pulse una tecla para continuar
         read
@@ -29,7 +29,7 @@ cargar_configuracion() {
         if test -f "config.cfg"
         then
                 source config.cfg
-                #el soruce nos permite ejecutar el programa, en este caso h$        
+                #el soruce nos permite ejecutar el programa 
         else
                 echo El archivo de configuración config.cfg no existe. Abortando
                 exit 1                                                      
@@ -37,27 +37,45 @@ cargar_configuracion() {
 }
 
 configuracion(){
-
-        echo  CONFIGURACION  
-        echo  -------------
+        echo
         JUGADORES=0
         TIEMPO=-1
+        COMPRUEBA=1
         until test "$JUGADORES" -le 10 -a "$JUGADORES" -ge 2
         do                                                                                 
                 echo Numeros de jugadores entre 2 y 10
                 read JUGADORES
-        done                                                                                                                                            
+        done            
+        echo                                                                                                                                
         # COMPROBACION de que si es un numero sino es una letra                     
-        until [[ ( "$TIEMPO" =~ ^[0-9]+$ && "$TIEMPO" -ge 0 && "$TIEMPO" -le 10 ) || "$TIEMPO" == "v" || "$TIEMPO" == "i" ]]
+        until test $COMPRUEBA -eq 0 
         do
                 echo "Tiempo de juego: 0-10, 'v' para velocidad máxima sin música, 'i' para pararlo de manera interactiva."
                 read TIEMPO
+                case "$TIEMPO" in
+                        [0-10])
+                                COMPRUEBA=0
+                                ;;
+                        "v")
+                                COMPRUEBA=0
+                                ;;
+                        "i")
+                                COMPRUEBA=0
+                                ;;
+                        *)
+                                echo "Opción no válida, escoja entre los parámetro permitidos."
+                                ;;
+
+
+                esac
+                
         done
 
-
+        echo
         echo -n "Ruta del archivo de log: "
         read LOG
         LOG=$LOG
+        echo
         echo "JUGADORES=$JUGADORES" >config.cfg
         echo "TIEMPO=$TIEMPO">>config.cfg
         echo "LOG=$LOG">>config.cfg
@@ -74,13 +92,16 @@ registrarPartida(){
         TOTALTIEMPO=$((TIEMPOFIN - TIEMPOIN))
         RESULT="$FECHA|$HORA|"
 
-        if ! test -f "$LOG"; then
+        if ! test -f "$LOG"
+        then
         echo "FECHA|HORA|ANA|JUAN|PABLO|LUIS|CARMEN|ELENA|DORI|BLAS|ZOE|FRAN|TIEMPO|JUGADORES|GANADOR" >"$LOG"
+        
         fi
 
-        for nombre in "${NOMBRES[@]}"; do
+        for nombre in ${NOMBRES[*]}
+        do
         pos="-"
-                for ((i = 0; i < ${#ELIMINADOS[@]}; i++))
+                for ((i = 0; i < ${#ELIMINADOS[*]}; i++))
                 do
                         if test  "$nombre" = "${ELIMINADOS[$i]}" 
                         then
@@ -92,13 +113,20 @@ registrarPartida(){
         done
 
         RESULT="${RESULT}$TOTALTIEMPO|$JUGADORES|$GANADOR"
-        if test -f "$LOG"
+       if test ! -f "$LOG" 
         then
-            echo "$RESULT">>fichero.log
-        else    
-            echo No existe el archivo fichero.log
-            exit 1
+                echo "FECHA|HORA|ANA|JUAN|PABLO|LUIS|CARMEN|ELENA|DORI|BLAS|ZOE|FRAN|TIEMPO_TOTAL|JUGADORES|GANADOR" > "$LOG"
+                echo "$RESULT">>$LOG
+        elif test ! -s "$LOG" 
+        then
+                echo "FECHA|HORA|ANA|JUAN|PABLO|LUIS|CARMEN|ELENA|DORI|BLAS|ZOE|FRAN|TIEMPO_TOTAL|JUGADORES|GANADOR" > "$LOG"
+                echo "$RESULT">>$LOG
+
+        
+        else
+                echo "$RESULT">>$LOG
         fi
+            
 
 
 }
@@ -224,7 +252,7 @@ jugar(){
                         fi
                 
                 NOMBRES2=(${NOMBRES2[*]})
-                read -p "Pulse alguna tecla para seguir con la partida."                                                                                                                
+                read -p "Pulse enter para seguir con la partida."                                                                                                                
         done
         echo ================================
         echo "${NOMBRES2} ha sido el ganador"
@@ -236,14 +264,22 @@ jugar(){
 
 ensenarEstadisticas(){
         cargar_configuracion
+        
         if test ! -f "$LOG" 
         then
                 echo "FECHA|HORA|ANA|JUAN|PABLO|LUIS|CARMEN|ELENA|DORI|BLAS|ZOE|FRAN|TIEMPO_TOTAL|JUGADORES|GANADOR" > "$LOG"
+                echo "Fichero sin datos."
+                return
         elif test ! -s "$LOG" 
         then
                 echo "FECHA|HORA|ANA|JUAN|PABLO|LUIS|CARMEN|ELENA|DORI|BLAS|ZOE|FRAN|TIEMPO_TOTAL|JUGADORES|GANADOR" > "$LOG"
+                echo "Fichero sin datos."
+                return
         
         fi
+        echo
+        echo
+
 
         TOTALTIEMPO=0
         TOTPARTIDAS=0
@@ -255,9 +291,12 @@ ensenarEstadisticas(){
         TEMPORAL=0
         GANADAST=0
         GANADASJ=0
+        TEMPORAL2=0
+        TEMPORAL3=0
         declare -A GANADAS FINALISTAS ULTIMOS JUGADAS
 
-        for nombre in "${NOMBRES[*]}"; do
+        for nombre in "${NOMBRES[*]}" 
+        do
                 GANADAS[$nombre]=0
                 FINALISTAS[$nombre]=0
                 ULTIMOS[$nombre]=0
@@ -270,7 +309,8 @@ ensenarEstadisticas(){
         while IFS="|" read -r FECHA HORA ANA JUAN PABLO LUIS CARMEN ELENA DORI BLAS ZOE FRAN TIEMPO_TOTAL JUGADORES GANADOR
         do
     # Saltar la cabecera
-        if [ "$FECHA" != "FECHA" ]; then
+        if [ "$FECHA" != "FECHA" ]
+        then
                 # Acumular tiempo total
                 TOTALTIEMPO=$((TOTALTIEMPO + TIEMPO_TOTAL))
                 TOTPARTIDAS=$((TOTPARTIDAS + 1))
@@ -296,21 +336,34 @@ ensenarEstadisticas(){
                                 1)
                                         GANADAS[${NOMBRES[$i]}]=$((GANADAS[${NOMBRES[$i]}] + 1))
                                         JUGADAS[${NOMBRES[$i]}]=$((JUGADAS[${NOMBRES[$i]}] + 1))
+                                        ULTIMOS[${NOMBRES[$i]}]=$((ULTIMOS[${NOMBRES[$i]}] + 0))
+                                        FINALISTAS[${NOMBRES[$i]}]=$((FINALISTAS[${NOMBRES[$i]}] + 0))
                                         ;;
                                 2)
                                         FINALISTAS[${NOMBRES[$i]}]=$((FINALISTAS[${NOMBRES[$i]}] + 1))
                                         JUGADAS[${NOMBRES[$i]}]=$((JUGADAS[${NOMBRES[$i]}] + 1))
+                                        GANADAS[${NOMBRES[$i]}]=$((GANADAS[${NOMBRES[$i]}] + 0))
+                                        ULTIMOS[${NOMBRES[$i]}]=$((ULTIMOS[${NOMBRES[$i]}] + 0))
+
                                         ;;
                                 $JUGADORES)
                                         ULTIMOS[${NOMBRES[$i]}]=$((ULTIMOS[${NOMBRES[$i]}] + 1))
                                         JUGADAS[${NOMBRES[$i]}]=$((JUGADAS[${NOMBRES[$i]}] + 1))
+                                        FINALISTAS[${NOMBRES[$i]}]=$((FINALISTAS[${NOMBRES[$i]}] + 0))
+                                        GANADAS[${NOMBRES[$i]}]=$((GANADAS[${NOMBRES[$i]}] + 0))
                                         ;;
                                 "-")
+                                        ULTIMOS[${NOMBRES[$i]}]=$((ULTIMOS[${NOMBRES[$i]}] + 0))
+                                        FINALISTAS[${NOMBRES[$i]}]=$((FINALISTAS[${NOMBRES[$i]}] + 0))
+                                        GANADAS[${NOMBRES[$i]}]=$((GANADAS[${NOMBRES[$i]}] + 0))
+                                        JUGADAS[${NOMBRES[$i]}]=$((JUGADAS[${NOMBRES[$i]}] + 0))
                                         ;;
-                                "*")
-                                        JUGADAS[${NOMBRES[$i]}]=$((JUGADAS[${NOMBRES[$i]}] + 1))
-
-                                ;;
+                                *)
+                                        ULTIMOS[${NOMBRES[$i]}]=$((ULTIMOS[${NOMBRES[$i]}] + 0))
+                                        FINALISTAS[${NOMBRES[$i]}]=$((FINALISTAS[${NOMBRES[$i]}] + 0))
+                                        GANADAS[${NOMBRES[$i]}]=$((GANADAS[${NOMBRES[$i]}] + 0))
+                                        JUGADAS[${NOMBRES[$i]}]=$((JUGADAS[${NOMBRES[$i]}] + 1))                                       
+                                        ;;
                         esac
                 done
 
@@ -322,7 +375,8 @@ ensenarEstadisticas(){
                         MASCORTA="|$FECHA|$HORA|$ANA|$JUAN|$PABLO|$LUIS|$CARMEN|$ELENA|$DORI|$BLAS|$ZOE|$FRAN|$TIEMPO_TOTAL|$JUGADORES|$GANADOR|"
                 fi
 
-                if [ $TIEMPO_TOTAL -gt $MAX_TIEMPO ]; then
+                if test $TIEMPO_TOTAL -gt $MAX_TIEMPO 
+                then
                         MAX_TIEMPO=$TIEMPO_TOTAL
                         MASLARGA="|$FECHA|$HORA|$ANA|$JUAN|$PABLO|$LUIS|$CARMEN|$ELENA|$DORI|$BLAS|$ZOE|$FRAN|$TIEMPO_TOTAL|$JUGADORES|$GANADOR|"
                 fi
@@ -331,10 +385,17 @@ ensenarEstadisticas(){
         fi
         done < "$LOG"
 
+        if test $TOTPARTIDAS -eq 0
+        then    
+                echo Archivo sin datos de partidas.
+                return
+        fi
 
         echo "Partida más corta: $MASCORTA"
         echo "Partida más larga: $MASLARGA"
         echo "Media de tiempo:   $((TOTALTIEMPO/TOTPARTIDAS))"
+        echo
+        echo
         for((i=2;i<=10;i++))
         do
                 if test ${PORCENTAJES[$i]} -ne 0 
@@ -347,15 +408,32 @@ ensenarEstadisticas(){
                 fi
         done
 
-        printf "%-10s | %-8s | %-10s | %-8s\n" "NOMBRE" "GANADAS" "FINALISTA" "ULTIMO" 
-        printf "%s\n" "--------------------------------------------"
+        echo
+        echo
 
-        #EXPLICAR POR QUÉ SE USA PRINTF EN VEZ DE ECHO
-        for nombre in "${NOMBRES[*]}"
-        do
-                printf "%-10s | %-8s | %-10s | %-8s\n" "$nombre" "${GANADAS[$nombre]}" "${FINALISTAS[$nombre]}" "${ULTIMOS[$nombre]}"
+        printf "%-10s | %-8s | %-10s | %-8s | %-10s | %-10s | %-10s |\n" "NOMBRE" "GANADAS" "FINALISTA" "ULTIMO" "%GANADAST" "%GANADASJ" "%JUGADAS"
+        echo "--------------------------------------------------------------------------------------"
+
+        for nombre in ${NOMBRES[*]}
+        do 
+                      
+                TEMPORAL=$(echo "scale=2; ${GANADAS[$nombre]} * 100 / $TOTPARTIDAS" | bc)
+                TEMPORAL3=$(echo "scale=2; ${JUGADAS[$nombre]} * 100 / $TOTPARTIDAS" | bc)
+
+                if test ${JUGADAS[$nombre]} -ne 0
+                then
+                        TEMPORAL2=$(echo "scale=2; ${GANADAS[$nombre]} * 100 / ${JUGADAS[$nombre]}" | bc)
+                else
+                        TEMPORAL2=0
+                fi
+
+                printf "%-10s | %-8s | %-10s | %-8s | %-10s | %-10s | %-10s |\n" "$nombre" "${GANADAS[$nombre]}" "${FINALISTAS[$nombre]}" "${ULTIMOS[$nombre]}" "$TEMPORAL" "$TEMPORAL2" "$TEMPORAL3"
         done
-        
+        echo "--------------------------------------------------------------------------------------"
+        echo
+        echo
+        read -p "Pulse enter para continuar."                                                                                                                
+
 
 }
 
@@ -369,8 +447,8 @@ do
                 echo "Integrante 1: Alex Bayle Polo"
                 echo "Integrante 2: Yago Houizot López"
                 echo
-                echo "Campo ADEFINIR en ESTADÍSTICAS:"
-                echo " - Este campo se refiere a *[explicación detallada del campo 'ADEFINIR']*."
+                echo "ESTADISTICA AÑADIDA:"
+                echo "Hemos añadido una estadistica para poder ver la cantidad de partidas en las que ha participado un jugador."
                 exit 0  
         elif test -n "$1" 
         then    
@@ -383,23 +461,28 @@ do
     mostrarmenu                                                                                      
 
     case $OPCION in
-            'C' )
-            configuracion
-            ;;
+                'C' )
+                        echo "          CONFIGURACION             "
+                        echo --------------------------------------
+                        configuracion
+                        ;;
 
-                                                                                                            
-            'J' )
-            jugar
-            ;;
+                                                                                                                
+                'J' )
+                        echo "              JUGAR             "
+                        echo --------------------------------------
+                        jugar
+                        ;;
 
 
-            'E')
-            echo Esstadisticas
-            ensenarEstadisticas
-            ;;
-            'S')
-            echo Saliendo...
-            exit 0
-            ;;
+                'E')
+                        echo "           ESTADISTICAS             "
+                        echo --------------------------------------
+                        ensenarEstadisticas
+                        ;;
+                'S')
+                        echo Saliendo...
+                        exit 0
+                        ;;
     esac                                                                                       
 done
