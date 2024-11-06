@@ -229,8 +229,7 @@ jugar(){
         ELIMINADOS=()
                
         
-        echo ${SILLAS_D[*]}
-        echo ${NOMBRES2[*]}
+        echo "Jugadores de la partida: ${NOMBRES2[*]}"
         while test $SILLAS -gt 0
         do                                                                                                                                                                                                        
                 echo Numero jugadores: ${#NOMBRES2[*]}
@@ -244,17 +243,17 @@ jugar(){
                         asignacion_sillas
                         
                 
-                        elif test "$TIEMPO" = "v"
-                        then
-                                echo Velocidad maxima sin musica
-                                asignacion_sillas
-                        else
-                                echo Tiempo de espera: $TIEMPO
-                                echo ♩♭♩♫♬♪♬♫♫♭♭♭♬♩♭
-                                sleep $TIEMPO
+                elif test "$TIEMPO" = "v"
+                then
+                        echo Velocidad maxima sin musica
+                        asignacion_sillas
+                else
+                        echo Tiempo de espera: $TIEMPO
+                        echo ♩♭♩♫♬♪♬♫♫♭♭♭♬♩♭
+                        sleep $TIEMPO
 
-                                asignacion_sillas
-                        fi
+                        asignacion_sillas
+                fi
                 
                 NOMBRES2=(${NOMBRES2[*]})
                 read -p "Pulse enter para seguir con la partida."                                                                                                                
@@ -310,7 +309,6 @@ ensenarEstadisticas(){
 
 
 
-        #HACER COMENTARIO IFS
         while IFS="|" read -r FECHA HORA ANA JUAN PABLO LUIS CARMEN ELENA DORI BLAS ZOE FRAN TIEMPO_TOTAL JUGADORES GANADOR
         do
         if [ "$FECHA" != "FECHA" ]
@@ -446,8 +444,8 @@ do
         if test "$1" = "-g" 
         then
                 echo "SSOOI PRIMERA ENTREGA GRUPAL"
-                echo "Integrante 1: Alex Bayle Polo"
-                echo "Integrante 2: Yago Houizot López"
+                echo "Integrante 1: Alex Bayle Polo --> PA1"
+                echo "Integrante 2: Yago Houizot López --> PA3"
                 echo
                 echo "ESTADISTICA AÑADIDA:"
                 echo "Hemos añadido una estadistica para poder ver la cantidad de partidas en las que ha participado un jugador."
